@@ -2,10 +2,11 @@ from keras import models, layers
 from matplotlib import pyplot as plt
 from keras.preprocessing.image import ImageDataGenerator
 import sys
-import os, fnmatch
+import os, shutil, fnmatch
 import csv
 import numpy as np
 import random
+import cv2
 
 # read csv files in and append to list, preparing for dictionary
 steeringAngle = []
@@ -23,7 +24,7 @@ imgExt = '*.png'
 keys = []
 for entry in sorted(os.listdir(os.getcwd() + '/deeptesla')):
     if fnmatch.fnmatch(entry, imgExt):
-        keys.append(entry[0:3] + entry[8:12])
+        keys.append(entry)
 
 dataDict = dict(zip(keys, steeringAngle))
 
@@ -47,7 +48,6 @@ def myShuffler(dataDict, Conv2or3D, sequenceSize=None):
                 sequenceDepth.append(k)
             elif currentSequence > (sequenceSize - 2):
                 sequences.append(sequenceDepth)
-                print(sequences[-1])
                 sequenceDepth = []
                 sequenceDepth.append(k)
                 currentSequence = -1
@@ -63,4 +63,36 @@ def myShuffler(dataDict, Conv2or3D, sequenceSize=None):
 # Create training data with 60% of data, 20% validation, 20% test, shuffling
 trainDataKeys, vldDataKeys, testDataKeys = myShuffler(dataDict, 2)
 
-trainDataKeys, vldDataKeys, testDataKeys = myShuffler(dataDict, 3, sequenceSize=8)
+# Take shuffled keys and put images into lists ready for opencv
+trainImages = []
+vldImages = []
+testImages = []
+for entry in os.listdir(os.getcwd() + '/deeptesla'):
+    for imageName in trainDataKeys:
+        if imageName == entry:
+            img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+            #cv2.imshow('image', img)
+            #cv2.waitKey(25)
+            trainImages.append(img)
+    for imageName in vldDataKeys:
+        if imageName == entry:
+            img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+            vldImages.append(img)
+    for imageName in testDataKeys:
+        if imageName == entry:
+            img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+            testImages.append(img)
+
+# Labels from the shuffled keys
+trainLabels = []
+for idx in trainDataKeys:
+    trainLabels.append(float(dataDict[idx][1:-1]))
+
+vldLabels = []
+for idx in vldDataKeys:
+    vldLabels.append(float(dataDict[idx][1:-1]))
+
+testLabels = []
+for idx in testDataKeys:
+    testLabels.append(float(dataDict[idx][1:-1]))
+
