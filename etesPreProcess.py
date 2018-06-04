@@ -66,13 +66,68 @@ def myShuffler(dataDict, Conv2or3D, sequenceSize=None):
     return trainDataKeys, vldDataKeys, testDataKeys
         
 # Create training data with 60% of data, 20% validation, 20% test, shuffling
+sequenceSize = 8
 trainDataKeys, vldDataKeys, testDataKeys = myShuffler(dataDict, 2)
 
 # Take shuffled keys and put images into lists ready for opencv
 trainImages = []
 vldImages = []
 testImages = []
-if len(trainDataKeys[0]) == 1:
+if len(trainDataKeys[0]) == sequenceSize: 
+    # Take shuffled keys of 3D shape, put into lists ready for opencv
+    print('3D')
+    sequenceImages = []
+    for sequence in trainDataKeys:
+        for imageName in sequence:
+            for entry in os.listdir(os.getcwd() + '/deeptesla/'):
+                if imageName == entry:
+                    img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+                    sequenceImages.append(img)
+        trainImages.append(sequenceImages)
+        sequenceImages = []
+        '''
+        for i in range(len(trainImages[-1])):
+            cv2.imshow('image', trainImages[-1][i])
+            cv2.waitKey(25)'''
+    
+    sequenceImages = []
+    for sequence in vldDataKeys:
+        for imageName in sequence:
+            for entry in os.listdir(os.getcwd() + '/deeptesla/'):
+                if imageName == entry:
+                    img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+                    sequenceImages.append(img)
+        vldImages.append(sequenceImages)
+        sequenceImages = []
+        '''
+        for i in range(len(vldImages[-1])):
+            cv2.imshow('image', vldImages[-1][i])
+            cv2.waitKey(25)'''
+ 
+    sequenceImages = []
+    for sequence in testDataKeys:
+        for imageName in sequence:
+            for entry in os.listdir(os.getcwd() + '/deeptesla/'):
+                if imageName == entry:
+                    img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+                    sequenceImages.append(img)
+        testImages.append(sequenceImages)
+        sequenceImages = []
+        '''
+        for i in range(len(testImages[-1])):
+            cv2.imshow('image', testImages[-1][i])
+            cv2.waitKey(25)'''
+
+    # Labels from 3D shuffled keys
+    trainLabels = []
+    trainSequence = []
+    for idx in trainDataKeys:
+        for elem in idx:
+            trainSequence.append(float(dataDict[elem][1:-1]))
+        trainLabels.append(trainSequence)
+        trainSequence = []
+else:
+    print('2D')
     for entry in os.listdir(os.getcwd() + '/deeptesla'):
         for imageName in trainDataKeys:
             if imageName == entry:
@@ -83,10 +138,14 @@ if len(trainDataKeys[0]) == 1:
         for imageName in vldDataKeys:
             if imageName == entry:
                 img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+                #cv2.imshow('image', img)
+                #cv2.waitKey(25)
                 vldImages.append(img)
         for imageName in testDataKeys:
             if imageName == entry:
                 img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+                #cv2.imshow('image', img)
+                #cv2.waitKey(25)
                 testImages.append(img)
 
     # Labels from the shuffled keys
@@ -101,27 +160,6 @@ if len(trainDataKeys[0]) == 1:
     testLabels = []
     for idx in testDataKeys:
         testLabels.append(float(dataDict[idx][1:-1]))
-
-else:
-    # Take shuffled keys of 3D shape, put into lists ready for opencv
-    sequenceImages = []
-    for sequence in trainDataKeys:
-        for imageName in sequence:
-            for entry in os.listdir(os.getcwd() + '/deeptesla/'):
-                if imageName == entry:
-                img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
-                sequenceImages.append(img)
-        trainImages.append(sequenceImages)
-        sequenceImages = []
-
-    # Labels from 3D shuffled keys
-    trainLabels = []
-    trainSequence = []
-    for idx in trainDataKeys:
-        for elem in idx:
-            trainSequence.append(float(dataDict[elem][1:-1]))
-        trainLabels.append(trainSequence)
-        trainSequence = []
 
 JourneyTime = time.time() - startTime
 print('Journeys code: ', JourneyTime)
