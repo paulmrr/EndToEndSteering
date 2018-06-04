@@ -7,8 +7,11 @@ import csv
 import numpy as np
 import random
 import cv2
+import time
 
 from imgs_to_npz import conv2d_npz_gen 
+
+startTime = time.time()
 
 # read csv files in and append to list, preparing for dictionary
 steeringAngle = []
@@ -98,5 +101,16 @@ testLabels = []
 for idx in testDataKeys:
     testLabels.append(float(dataDict[idx][1:-1]))
 
+JourneyTime = time.time() - startTime
+print('Journeys code: ', JourneyTime)
+
 conv2d_npz_gen("formatted_etes_05", trainImages, vldImages, testImages,.5)
+paulTime0 = time.time() - startTime - JourneyTime
+print('Pauls 0.5: ', paulTime0)
+
 conv2d_npz_gen("formatted_etes_025", trainImages, vldImages, testImages,.25)
+paulTime1 = time.time() - startTime - paulTime0
+print('Pauls 0.25: ', paulTime1)
+
+totalTime = time.time() - startTime
+print('Total: ', totalTime)
