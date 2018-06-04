@@ -72,34 +72,56 @@ trainDataKeys, vldDataKeys, testDataKeys = myShuffler(dataDict, 2)
 trainImages = []
 vldImages = []
 testImages = []
-for entry in os.listdir(os.getcwd() + '/deeptesla'):
-    for imageName in trainDataKeys:
-        if imageName == entry:
-            img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
-            #cv2.imshow('image', img)
-            #cv2.waitKey(25)
-            trainImages.append(img)
-    for imageName in vldDataKeys:
-        if imageName == entry:
-            img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
-            vldImages.append(img)
-    for imageName in testDataKeys:
-        if imageName == entry:
-            img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
-            testImages.append(img)
+if len(trainDataKeys[0]) == 1:
+    for entry in os.listdir(os.getcwd() + '/deeptesla'):
+        for imageName in trainDataKeys:
+            if imageName == entry:
+                img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+                #cv2.imshow('image', img)
+                #cv2.waitKey(25)
+                trainImages.append(img)
+        for imageName in vldDataKeys:
+            if imageName == entry:
+                img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+                vldImages.append(img)
+        for imageName in testDataKeys:
+            if imageName == entry:
+                img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+                testImages.append(img)
 
-# Labels from the shuffled keys
-trainLabels = []
-for idx in trainDataKeys:
-    trainLabels.append(float(dataDict[idx][1:-1]))
+    # Labels from the shuffled keys
+    trainLabels = []
+    for idx in trainDataKeys:
+        trainLabels.append(float(dataDict[idx][1:-1]))
 
-vldLabels = []
-for idx in vldDataKeys:
-    vldLabels.append(float(dataDict[idx][1:-1]))
+    vldLabels = []
+    for idx in vldDataKeys:
+        vldLabels.append(float(dataDict[idx][1:-1]))
 
-testLabels = []
-for idx in testDataKeys:
-    testLabels.append(float(dataDict[idx][1:-1]))
+    testLabels = []
+    for idx in testDataKeys:
+        testLabels.append(float(dataDict[idx][1:-1]))
+
+else:
+    # Take shuffled keys of 3D shape, put into lists ready for opencv
+    sequenceImages = []
+    for sequence in trainDataKeys:
+        for imageName in sequence:
+            for entry in os.listdir(os.getcwd() + '/deeptesla/'):
+                if imageName == entry:
+                img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
+                sequenceImages.append(img)
+        trainImages.append(sequenceImages)
+        sequenceImages = []
+
+    # Labels from 3D shuffled keys
+    trainLabels = []
+    trainSequence = []
+    for idx in trainDataKeys:
+        for elem in idx:
+            trainSequence.append(float(dataDict[elem][1:-1]))
+        trainLabels.append(trainSequence)
+        trainSequence = []
 
 JourneyTime = time.time() - startTime
 print('Journeys code: ', JourneyTime)
