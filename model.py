@@ -32,13 +32,20 @@ def build_model():
     return model
 
 def train_model(model):
-    X_train = np.load('data/train_data.npy', mmap_mode='r')
-    y_train = np.load('data/train_labels.npy', mmap_mode='r')
-    X_test = np.load('data/test_data.npy', mmap_mode='r')
-    y_test = np.load('data/test_labels.npy', mmap_mode='r')
+    # X_train_m = np.load('data/train_data.npy', mmap_mode='r')
+    # y_train_m = np.load('data/train_labels.npy', mmap_mode='r')
+    # X_test_m = np.load('data/test_data.npy', mmap_mode='r')
+    # y_test_m = np.load('data/test_labels.npy', mmap_mode='r')
+    X_test_m = np.load('data/test_data.npy')
+    y_test_m = np.load('data/test_labels.npy')
 
-    print(X_train)
-    print(y_train)
+    # X_train = X_train_m[0:500]
+    # y_train = y_train_m[0:500]
+    X_train = X_test_m[0:50]
+    y_train = y_test_m[0:50]
+
+    print(X_train.shape)
+    print(y_train.shape)
 
     print("starting...")
     # model.fit(X_train, y_train, batch_size=32, epochs=5,
