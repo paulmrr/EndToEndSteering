@@ -1,102 +1,116 @@
-from matplotlib import pyplot as plt
 import keras
 from keras.models import Sequential, load_model
 from keras.layers import Dense, MaxPooling3D, Conv3D, Flatten, Dropout
 from keras.preprocessing.image import ImageDataGenerator
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 import sys
-import os, shutil, fnmatch
-import csv
+import os
 import numpy as np
-import random
+import numpy.random as rnd
 #import cv2
 import time
 
+startTime = time.time()
+
 def build_model(shape):
     model = keras.Sequential()
-    model.add(Conv3D(3, (5, 5, 5), activation='relu', input_shape=(shape)))
+    model.add(Conv3D(16, (3, 3, 3), activation='relu', input_shape=(shape)))
+    #model.add(Conv3D(32, (5, 5, 5), activation='relu'))
     model.add(MaxPooling3D((2, 2, 2)))
-    model.add(MaxPooling3D((2, 2, 2)))
-    model.add(Conv3D(64, (5, 5, 5), activation='relu'))
-    model.add(Conv3D(64, (5, 5, 5), activation='relu'))
-    model.add(Conv3D(8, (5, 5, 5), activation='relu'))
+    #model.add(Conv3D(64, (3, 3, 3), activation='relu'))
+    #model.add(Conv3D(64, (3, 3, 3), activation='relu'))
+    #model.add(MaxPooling3D((2, 2, 2)))
     model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
-    model.add(Dropout(.5))
-    model.add(Dense(1))
+    model.add(Dense(16, activation='relu'))
+    #model.add(Dropout(0.5))
+    model.add(Dense(4))
 
     model.compile(optimizer='adam', loss='mse')
     model.summary()
     return model
 
-def generator3D(x, y, lookback, delay, min_index, max_index, shuffle=False, 
-                batch_size=128, step=6):
-    if max_index is None:
-        max_index = len(x) - delay - 1
-    i = min_index + lookback
-    while 1:
-        if shuffle:
-            rows = np.random.randint(min_index+lookback, max_index, size=batch_size)
-        else:
-            if i + batch_size >= max_index:
-                i = min_index + lookback
-            rows = np.arange(i, min(i + batch_size, max_index))
-            i += len(rows)
-        samples = np.zeros((len(rows), lookback//step, len(y)))
-        targets = np.zeros((len(rows),))
-        for j, row in enumerate(rows):
-            indices = range(rows[j] - lookback, rows[j], step)
-            samples[j] = x[indices]
-            targets[j] = y[indicies]
-    yield samples, targets
+def generator3D(x, y, sequence_len, batch_size):
+    seq_list = []
+    batch_list = []
+    train_size = len(x)
+    random_seq = [i for i in range(int(len(x)/sequence_len))]
+    rnd.shuffle(random_seq)
+    count = 0
+    while True:
+        batch_list = []
+        labels = []
+        for i in range(batch_size):
+            if count >= len(random_seq):
+                count = 0
+                rnd.shuffle(random_seq)
+            batch_list.append(x[random_seq[count]*sequence_len:                                                           (random_seq[count]+1)*sequence_len])
+            labels.append(y[random_seq[count]*sequence_len:
+                          (random_seq[count]+1)*sequence_len])
+            count += 1
+        yield np.array(batch_list), np.array(labels)
 
 def train_model():
     print("loading...")
+    print()
+
     data = np.load('dataset_0.25.npz', mmap_mode='r')
-    X_train = data['train_data']/255
+    X_train = data['train_data'] / 255
     y_train = data['train_labels']
-    X_test = data['test_data']/255
+    X_test = data['test_data'] / 255
     y_test = data['test_labels']
+    
+    loadTime = time.time() - startTime
+    print('Load Time: ', loadTime)
+    print()
 
-    lookback = 15
-    step = 1
-    delay = 0
-    batch_size = 128
+    sequence_len = 4
+    batch_size = 32
+    epochs = 8
 
-    train_gen = generator3D(X_train, y_train, lookback=lookback, delay=delay,
-                          min_index=0, max_index=int(0.8*len(X_train)), 
-                          shuffle=False, step=step, batch_size=batch_size)
-    val_gen = generator3D(X_train, y_train, lookback=lookback, delay=delay, 
-                        min_index=int(0.8*len(X_train))+1, 
-                        max_index=None, step=step,
-                        batch_size=batch_size)
+    train_gen = generator3D(X_train[0:21609], y_train[0:21609], sequence_len, batch_size)
 
-    test_gen = generator3D(X_test, y_test, lookback=lookback, delay=delay,
-                         min_index=0, max_index=None, step=step,
-                         batch_size=batch_size)
+    val_gen = generator3D(X_train[21609:], y_train[21609:], sequence_len, batch_size)
 
-    val_steps = len(X_train)-delay-1 - int(0.8*len(X_train) + 1) - lookback
+    test_gen = generator3D(X_test, y_test, sequence_len, batch_size)
 
-    test_steps = (len(X_train) + len(X_test) - len(X_train) - lookback)
+
+    print('input shape: ', next(train_gen)[0][0].shape)
+    print()
+    
+    model = build_model(next(train_gen)[0][0].shape)
     
     print("starting...")
-
-    model = build_model(X_train.shape[1:])
-    model.fit_generator(train_gen, 
-                        steps_per_epoch=int(0.8*len(X_train))//batch_size,
-                        epochs=epochs, validation_data=val_gen,
-                        validation_steps = len(X_train)//batch_size,
-                        verbose=1)
+    print()
     
-    model.save('model3d.h5')
+    hist = model.fit_generator(train_gen, 
+                               steps_per_epoch=len(X_train[0:21609])//batch_size,
+                               epochs=epochs, validation_data=val_gen,
+                               validation_steps = len(X_train[21609:])//batch_size,
+                               verbose=1)
+    
+    model.save("model3d_4.h5")
     print("saved model...")
+    print()
+    
+    trainTime = time.time() - startTime - loadTime
+    
+    print('train time: ', trainTime)
+    print()
 
-    randint = np.random.randint(len(X_test), size=50)
-    pred = model.predict(X_test[randint])
-    actual = y_test[randint]
-    Xs = X_test[randint]
-
-    for i in range(len(actual)):
-        print("Actual: {}, Predicted:".format(actual[i], pred[i]))
+    plotFlag = True
+    if plotFlag:
+        loss = hist.history['loss']
+        val_loss = hist.history['val_loss']
+        epoch_range = range(1, len(loss) + 1)
+        fig = plt.figure()
+        plt.plot(epoch_range, loss, 'bo', label='Training loss')
+        plt.plot(epoch_range, val_loss, 'b', label='Validation loss')
+        plt.title('Loss v. epoch')
+        plt.legend()
+        fig.savefig('Conv3D_seq_{}'.format(sequence_len))
+        #plt.show()
 
     print("ending...")
 
