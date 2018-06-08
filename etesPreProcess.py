@@ -164,6 +164,8 @@ else:
 JourneyTime = time.time() - startTime
 print('Journeys code: ', JourneyTime)
 
+exit()
+
 conv2d_npz_gen("formatted_etes_05", trainImages, vldImages, testImages,.5)
 paulTime0 = time.time() - startTime - JourneyTime
 print('Pauls 0.5: ', paulTime0)
