@@ -113,10 +113,10 @@ if len(trainDataKeys[0]) == sequenceSize:
                     sequenceImages.append(img)
         testImages.append(sequenceImages)
         sequenceImages = []
-        ''' 
+
         for i in range(len(testImages[-1])):
             cv2.imshow('image', testImages[-1][i])
-            cv2.waitKey(25)'''
+            cv2.waitKey(25)
 
     # Labels from 3D shuffled keys
     trainLabels = []
