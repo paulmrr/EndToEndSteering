@@ -67,7 +67,7 @@ def myShuffler(dataDict, Conv2or3D, sequenceSize=None):
         
 # Create training data with 60% of data, 20% validation, 20% test, shuffling
 sequenceSize = 8
-trainDataKeys, vldDataKeys, testDataKeys = myShuffler(dataDict, 2)
+trainDataKeys, vldDataKeys, testDataKeys = myShuffler(dataDict, 3, sequenceSize)
 
 # Take shuffled keys and put images into lists ready for opencv
 trainImages = []
@@ -85,10 +85,10 @@ if len(trainDataKeys[0]) == sequenceSize:
                     sequenceImages.append(img)
         trainImages.append(sequenceImages)
         sequenceImages = []
-        '''
+
         for i in range(len(trainImages[-1])):
             cv2.imshow('image', trainImages[-1][i])
-            cv2.waitKey(25)'''
+            cv2.waitKey(25)
     
     sequenceImages = []
     for sequence in vldDataKeys:
@@ -113,10 +113,10 @@ if len(trainDataKeys[0]) == sequenceSize:
                     sequenceImages.append(img)
         testImages.append(sequenceImages)
         sequenceImages = []
-        '''
+
         for i in range(len(testImages[-1])):
             cv2.imshow('image', testImages[-1][i])
-            cv2.waitKey(25)'''
+            cv2.waitKey(25)
 
     # Labels from 3D shuffled keys
     trainLabels = []
@@ -132,8 +132,8 @@ else:
         for imageName in trainDataKeys:
             if imageName == entry:
                 img = cv2.imread(os.getcwd() + '/deeptesla/' + str(imageName))
-                #cv2.imshow('image', img)
-                #cv2.waitKey(25)
+                cv2.imshow('image', img)
+                cv2.waitKey(25)
                 trainImages.append(img)
         for imageName in vldDataKeys:
             if imageName == entry:
@@ -163,6 +163,8 @@ else:
 
 JourneyTime = time.time() - startTime
 print('Journeys code: ', JourneyTime)
+
+exit()
 
 conv2d_npz_gen("formatted_etes_05", trainImages, vldImages, testImages,.5)
 paulTime0 = time.time() - startTime - JourneyTime
