@@ -4,10 +4,16 @@ Paul Rothhammer-Ruiz | Journey McDowell | Chris Varanese
 (c) 2018
 
 # Usage
-Place folder "deeptesla" into current working directory
->>> python3 etesPreProcess.py 
+To run 3D Convolution
+$ python3 run3D.py 
+
+To run 2D Convolution
+$ python3 model2.py
+
+To run Saliency maps
+$ python3 sals_vis
 
 # Current Status
-etesPreProcess.py will call imgs_to_npz.py to compress ifles to npz
+2D Convolution has the best results
 
 # Bugs
